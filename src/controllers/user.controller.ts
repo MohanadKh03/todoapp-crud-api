@@ -1,37 +1,45 @@
 import { Request, Response } from "express"
-import { getAllUsers,getUserById,addNewUser } from "../services/user.service"
-import { User } from "../types/user"
+import { UserService } from "../services/user.service"
+import { IUser } from "../models/User"
 
-async function getUsersController(req: Request,res: Response){
-    try{
-        const users = await getAllUsers()
-        res.status(200).json(users)
+
+export class UserController{
+    static getAllUsers(req: Request,res: Response){
+        UserService.getAllUsers()
+            .then((users) => {
+                res.status(200).json(users)
+            })
+            .catch((error) => {
+                res.status(500).json({"message": "Error message!"})
+            })
     }
-    catch(error: any) {
-        res.status(500).json({Message: error.message})
+    static getUserById(req: Request,res: Response){
+        let id: Number = parseInt(req.params.id)
+        UserService.getUserById(id)
+            .then((user) => {
+                if(user)
+                    res.status(200).json(user)
+                res.status(404).json({"message": "User not found!"})
+            })
+            .catch((error) => {
+                res.status(500).json({"message": "Some random error message!"})
+            })
+    }
+    static addNewUser(req: Request,res: Response){
+        let user: IUser = req.body
+        UserService.createUser(user)
+            .then((user) => {
+                res.status(200).json(user)
+            })
+            .catch((error) => {
+                if(error.name == "Validation Error"){
+                    const errors: Record<string, any> = {};
+                    Object.keys(error.errors).forEach((key) => {
+                        errors[key] = error.errors[key].message;
+                    });
+                    res.status(400).send({"message ": errors});
+                }
+                res.status(500).json({"message": "Some random error!"})
+            })
     }
 }
-
-async function getUserByIdController (req: Request,res: Response) {
-    try{
-        const id = parseInt(req.params.id,10)
-        const user: User = await getUserById(id)
-        res.status(200).json(user)
-    }
-    catch(error: any) {
-        res.status(500).json({Message: error.message})
-    }
-}
-
-async function addNewUserController (req: Request,res: Response) {
-    try{
-        const newUser = req.body as User
-        const message: string = await addNewUser(newUser)
-        res.status(200).json({Message: message})
-    }
-    catch(error: any){
-        res.status(500).json({Message: error.message})
-    }
-}
-
-export {getUsersController,getUserByIdController,addNewUserController}
