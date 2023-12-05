@@ -1,4 +1,5 @@
 import User, { IUser } from "../models/User";
+import { ObjectId } from "mongoose";
 import { UserRepository } from "../repositories/user.repository";
 
 export class UserService{
@@ -6,7 +7,7 @@ export class UserService{
     public static createUser(user: IUser): Promise<IUser>{
         return new Promise((resolve,reject) => {
             UserRepository.createUser(user)
-                .then((createdUser) => {
+                .then((createdUser: IUser) => {
                     resolve(createdUser)
                 })
                 .catch((error) => {
@@ -28,7 +29,7 @@ export class UserService{
         })
     }
 
-    public static getUserById(id: Number) : Promise<IUser | null>{
+    public static getUserById(id: string) : Promise<IUser | null>{
         return new Promise((resolve,reject) => {
             UserRepository.getUserById(id)
                 .then((user) => {

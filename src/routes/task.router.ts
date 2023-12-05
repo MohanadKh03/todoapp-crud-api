@@ -1,11 +1,10 @@
-// import express from 'express';
-// import {getTasksController,getTaskByUserIdController,addNewTaskController}
-//         from "../controllers/task.controller"
+import express from 'express';
+import {TaskController} from "../controllers/task.controller"
 
-// const taskRouters = express.Router();
+const taskRouters = express.Router();
 
-// taskRouters.get('/', getTasksController);
-// taskRouters.get('/:userId', getTaskByUserIdController);
-// taskRouters.post('', addNewTaskController);
+taskRouters.get('/', TaskController.getAllTasks);
+taskRouters.get('/:userId', TaskController.getTasksByUserId);
+taskRouters.post('', TaskController.addNewTask);
 
-// export default taskRouters;
+export default taskRouters;

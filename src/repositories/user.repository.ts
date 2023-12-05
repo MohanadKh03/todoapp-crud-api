@@ -1,3 +1,4 @@
+import { ObjectId } from "mongoose";
 import User from "../models/User"
 import { IUser } from "../models/User"
 
@@ -6,18 +7,19 @@ export class UserRepository{
     public static createUser(user: IUser): Promise<IUser> {
         return new Promise((resolve, reject) => {
           User.create(user)
-            .then((createdUser) => {
+            .then((createdUser: IUser) => {
               console.log('User created successfully');
-              resolve(createdUser as IUser);
+              resolve(createdUser);
             })
-            .catch((error) => {
+            .catch((error: Error) => {
+              console.error('Error name: ' , error.name);
               console.error('Error creating user: ', error.message);
-              reject(error); // Re-throw the error to propagate it to the calling code
+              reject(error); 
             });
         });
       }
 
-    public static getAllUsers(): Promise<IUser[]>{
+     public static getAllUsers(): Promise<IUser[]>{
         return new Promise((resolve, reject) => {
             User.find()
               .then((foundUsers) => {
@@ -31,7 +33,7 @@ export class UserRepository{
           });
     }
 
-    public static getUserById(id: Number): Promise<IUser>{
+    public static getUserById(id: string): Promise<IUser>{
         return new Promise((resolve, reject) => {
             User.findById(id)
               .then((user) => {

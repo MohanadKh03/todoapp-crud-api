@@ -1,19 +1,23 @@
 import express from 'express'
 import usersRouter from './routes/user.router'
-// import taskRouters from './routes/task.router'
+import taskRouters from './routes/task.router'
 import mongoose, { mongo } from "mongoose";
+import * as dotenv from "dotenv";
+dotenv.config({ path: __dirname+ '/../.env' });
 
 const app = express()
 app.use(express.json())
 
 console.log("HERE ROUTERS")
 app.use('/users',usersRouter)
-// app.use('/tasks',taskRouters)
+app.use('/tasks',taskRouters)
 
-const PORT = 1234
+const PORT = process.env.PORT
 
-const url = 'mongodb://root:password@localhost:27017/?authSource=admin';
+const url = process.env.MONGODB_URL!;
 
+console.log(PORT)
+console.log(url)
 
 mongoose.connect(url).then(() =>{
     console.log("DB connected successfully!")
