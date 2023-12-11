@@ -3,100 +3,39 @@
 // import { DummyUsers } from "../repositories/user.repository";
 
 import { ITask } from "../models/toDo";
+import { IUser } from "../models/User";
 import { TaskRepository } from "../repositories/task.repository";
+import { ApiResponse } from "../utils/api.response";
 import { UserService } from "./user.service";
 
 
 export class TaskService{
 
-    public static createUser(task: ITask): Promise<ITask | null>{
-        return new Promise((resolve,reject) => {
-            UserService.getUserById(task.userId)
-                .then((user) => {
-                    if(!user)
-                        reject(null)
-                    else{
-                        TaskRepository.createTask(task)
-                        .then((createdUser: ITask) => {
-                            resolve(createdUser)
-                        })
-                        .catch((error) => {
-                            reject(error);
-                        });
-                    }
-                })
-                .catch((error) => {
-                    reject(error)
-                })
-            
-        })
+    public static async createTask(task: ITask): Promise<ApiResponse>{
+        const user: IUser|null = await (await UserService.getUserById(task.userId)).body
+        if(user){
+            const createdTask = await TaskRepository.createTask(task)
+            return { body: createdTask , message: "Task created successfully!"}
+        }
+        return {body: null,message: "Cannot assign a task to a non-existing user!"} 
     }
 
-    public static getAllTasks() : Promise<ITask[]>{
-        return new Promise((resolve,reject) => {
-            TaskRepository.getAllTasks()
-                .then((foundTasks) => {
-                    resolve(foundTasks)
-                })
-                .catch((error) => {
-                    reject(error);
-                });
-        })
+    public static async getAllTasks() : Promise<ApiResponse>{
+        try{
+            const tasks = await TaskRepository.getAllTasks()
+            return { body: tasks, message: "Tasks retreived successfully!"}
+        }catch(error: any){
+            return {body: null , message: "Error while retreiving tasks!"}
+        }
     }
 
-    public static getTasksByUserId(userId: string) : Promise<ITask[] | null>{
-        return new Promise((resolve,reject) => {
-            UserService.getUserById(userId)
-                .then((user) => {
-                    if(!user)
-                        resolve(null)
-                    TaskRepository.getTasksByUserId(userId)
-                    .then((tasks) => {
-                        resolve(tasks)
-                    })
-                    .catch((error) => {
-                        console.error('Error creating user:', error.message);
-                        reject(error);
-                    });
-                })
-                .catch((error) => {
-                    console.error('Error creating user:', error.message);
-                    reject(error);
-                })
-            
-        })
+    public static async getTasksByUserId(userId: string) : Promise<ApiResponse>{
+        let user : IUser | null = await (await UserService.getUserById(userId)).body
+        if(user){
+            const tasks = await TaskRepository.getTasksByUserId(userId)
+            return { body: tasks , message: "Task created successfully!"}
+        }
+        return {body: null,message: "Cannot retreive tasks for a non-existing user!"} 
     }
 
 }
-
-// function getAllTasks() : Promise<Array<Task>>{
-//     return new Promise((resolve,reject) => {
-//         setTimeout(() => {
-//             resolve(DummyTasks)
-//         }, 1000)
-//     })
-// }
-
-// function getTasksByUserId(userId: number) : Promise<Array<Task>>{
-//     return new Promise((resolve, reject) => {
-//         setTimeout(() => {
-//             const tasks: Array<Task> = DummyTasks.filter((task) => task.userId === userId);
-//             resolve(tasks)
-//         }, 1000);
-//         })
-// }
-
-// function addNewTask(task: Task) : Promise<string> {
-//     return new Promise((resolve,reject) => {
-//         setTimeout(() => {
-//             //TODO handle all the task validations
-
-//             if (!task || DummyUsers.find((user) => task.userId === user.id) == null)
-//                 reject('Invalid task data')
-//             DummyTasks.push(task)
-//             resolve("Task pushed successfully!")
-//         }, 1000);
-//     })
-// }
-
-// export {getAllTasks,getTasksByUserId,addNewTask}

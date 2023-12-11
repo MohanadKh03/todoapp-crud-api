@@ -5,94 +5,48 @@ import { Request, Response } from "express"
 import { ITask } from "../models/toDo"
 import { TaskService } from "../services/task.service"
 import mongoose,{ ObjectId, isValidObjectId } from "mongoose"
+import { ApiResponse } from "../utils/api.response"
 
 
 
 export class TaskController{
-    static getAllTasks(req: Request,res: Response){
-        TaskService.getAllTasks()
-            .then((tasks: ITask[]) => {
-                res.status(200).json({message: "Retreived tasks successfully!" ,data: tasks})
-            })
-            .catch((error: Error) => {
-                res.status(500).json({"message": "Error message!"})
-            })
+    public static async getAllTasks(req: Request,res: Response){
+        let response: ApiResponse = await TaskService.getAllTasks()
+        if(response.body)
+            res.status(200).json(response)
+        else
+            res.status(500).json({body:null,message: "Error while retreiving tasks!"})
     }
-    static getTasksByUserId(req: Request,res: Response){
+    public static async getTasksByUserId(req: Request,res: Response){
+        let userId: string = req.params.userId
         if(!isValidObjectId(req.params.userId))
-            res.status(400).json({"message": "Id is not valid!"})
+            res.status(400).json({body: null,message: "Id is not valid!"})
         else{
-            const id: string = req.params.userId 
-            TaskService.getTasksByUserId(id)
-                .then((tasks: ITask[] | null) => {                    
-                    if(tasks)
-                        res.status(200).json({message: "Retreived tasks successfully!",data: tasks})
-                    else
-                        res.status(404).json({"message": "User does not exist!"})
-                })
-                .catch((error) => {
-                    res.status(500).json({"message": "Some random error message!"})
-                })
+            let response: ApiResponse = await TaskService.getTasksByUserId(userId)
+            if(response.body)
+                res.status(200).json(response)
+            else
+                res.status(500).json(response)
         }
     }
-    static addNewTask(req: Request,res: Response){
+    public static async addNewTask(req: Request,res: Response){
         let task: ITask = req.body
-        TaskService.createUser(task)
-            .then((task) => {
-                res.status(200).json({message: "Created Successfully!",
-                                        data: task})
-            })
-            .catch((error) => {
-                if(error == null)
-                    res.status(404).json({message: "Could not find the user you assigned to this task!"})
-                else if(error.name == "Validation Error"){
-                    const errors: Record<string, string> = {};
-                    Object.keys(error.errors).forEach((key) => {
-                        errors[key] = error.errors[key].message;
-                    });
-                    res.status(400).send({"message ": errors});
-                }
-                else if (error.code === 11000 || error.code === 11001){
-                    const duplicateField = Object.keys(error.keyPattern)[0];
-                    res.status(400).send({ error: `${duplicateField} already exists!` });
-                }
-                else
-                //condition for all errors ??
-                    res.status(500).json({"message": error.message})
-            })
+        try{
+            let response: ApiResponse = await TaskService.createTask(task)
+            if(response.body)
+                res.status(200).json(response)
+            else
+                res.status(404).json(response)
+        }catch(error: any){
+            if(error.name == "ValidationError"){
+                const errors: Record<string, string> = {};
+                Object.keys(error.errors).forEach((key) => {
+                    errors[key] = error.errors[key].message;
+                });
+                res.status(400).json({body: errors , message: "Validation Error!"})
+            }
+            res.status(500).json({body: null,message: "Error while creating task!"})
+        }
     }
 }
 
-// async function getTasksController (req: Request,res: Response){
-//     try{
-//         const tasks = await getAllTasks();
-//         res.status(200).json(tasks);
-//     }
-//     catch(error: any) {
-//         res.status(500).json({Message: error.message});
-//     }
-// }
-
-// async function getTaskByUserIdController (req: Request,res: Response) {
-//     try{
-//         const userId = parseInt(req.params.userId,10)
-//         const tasks: Array<Task> = await getTasksByUserId(userId)
-//         res.status(200).json(tasks)
-//     }
-//     catch(error: any) {
-//         res.status(500).json({Message: error.message})
-//     }
-// }
-
-// async function addNewTaskController (req: Request,res: Response) {
-//     try{
-//         const newTask = req.body as Task
-//         const message: string = await addNewTask(newTask)
-//         res.status(200).json({Message: message})
-//     }
-//     catch(error: any){
-//         res.status(500).json({Message: error})
-//     }
-// }
-
-// export {getTasksController,getTaskByUserIdController,addNewTaskController}
